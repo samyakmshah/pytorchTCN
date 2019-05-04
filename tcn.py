@@ -35,11 +35,19 @@ class ResidualBlock(nn.Module):
 		res = x if self.fit_shape == None else self.fit_shape(x)
 		return self.relu(out + res)
 
-class TCN(nn.Module):
+class TCN_base(nn.Module):
 	def __init__(self, in_n, ch_n, kernel_size = 2, dropout = 0.2):
 		super(TCN, self).__init__()
 		layers = []
 		lvl_n = len(ch_n)
 		for i in range(lvl_n):
 			dilation = 2**i
-			ch_in = 
+			ch_in = in_n if i == 0 else ch_n[i-1]
+			ch_out = ch_n[i]
+			layers += [ResidualBlock(ch_in, ch_out, kernel_size, stride = 1, dilation = dilation, padding = (kernel_size-1)*dilation, dropout=dropout)]
+
+
+		self.network = nn.Sequential(*layers) # The * is to unpack the array
+
+	def forward(self, x):
+		return self.network(x)
